@@ -7,6 +7,8 @@ import 'package:pokedex/bloc/pokemon/pokemon_event.dart';
 import 'package:pokedex/bloc/pokemon/pokemon_state.dart';
 import 'package:pokedex/models/pokemon/pokemon_complete_model.dart';
 import 'package:pokedex/utils/constants.dart';
+import 'package:provider/provider.dart';
+import 'package:pokedex/pages/widget/theme.dart';
 
 class DescriptionPokemonPage extends HookWidget {
   const DescriptionPokemonPage({Key? key, required this.pokemonId})
@@ -18,6 +20,7 @@ class DescriptionPokemonPage extends HookWidget {
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
 
     useEffect(() {
       context.read<PokemonBloc>().add(PokemonCompleteResquest(id: pokemonId));
@@ -25,7 +28,7 @@ class DescriptionPokemonPage extends HookWidget {
     });
 
     return Scaffold(
-      backgroundColor: Colors.redAccent,
+      backgroundColor: themeNotifier.isDarkMode ? Colors.grey[900] : Colors.redAccent, 
       body: BlocBuilder<PokemonBloc, PokemonState>(
         builder: (context, state) {
           if (state.pokemonCompleteStatus == RequestStatus.loadInProgress) {
@@ -112,6 +115,8 @@ class StarFavoritePokemon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+
     return GestureDetector(
       onTap: () {
         if (favoritePokemons.contains(pokemon.id)) {
@@ -128,7 +133,7 @@ class StarFavoritePokemon extends StatelessWidget {
           favoritePokemons.contains(pokemon.id)
               ? const IconData(0xecf3, fontFamily: 'MaterialIcons')
               : const IconData(0xecf2, fontFamily: 'MaterialIcons'),
-          color: Colors.white,
+          color: themeNotifier.isDarkMode ? Colors.yellow : Colors.white, 
           size: 40.0,
         ),
       ),
@@ -136,7 +141,7 @@ class StarFavoritePokemon extends StatelessWidget {
   }
 }
 
-//Widgets DescriptionPokemonPage
+
 class ImagePokemon extends StatelessWidget {
   const ImagePokemon({
     Key? key,
@@ -170,13 +175,15 @@ class InfoPokemon extends StatelessWidget {
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+
     return Container(
       width: width,
       height: height * 0.6,
-      decoration: const BoxDecoration(
-          borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
               topRight: Radius.circular(20), topLeft: Radius.circular(20)),
-          color: Colors.white),
+          color: themeNotifier.isDarkMode ? Colors.grey[850] : Colors.white), 
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -229,7 +236,7 @@ class TypesPokemon extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           typesPokemon.join(", "),
-          style: const TextStyle(color: Colors.white, fontSize: 15),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white), 
           textAlign: TextAlign.left,
         ),
       ),
@@ -258,8 +265,10 @@ class NamePokemon extends StatelessWidget {
       children: [
         Text(
           name,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
           textAlign: TextAlign.left,
         ),
       ],
@@ -305,12 +314,16 @@ class RowDescription extends StatelessWidget {
             width: width * 0.3,
             child: Text(
               textLeft,
-              style: const TextStyle(color: Colors.blueGrey, fontSize: 17),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ), 
             ),
           ),
           Text(
             textRigth,
-            style: const TextStyle(color: Colors.black, fontSize: 17),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ), 
           ),
         ],
       ),

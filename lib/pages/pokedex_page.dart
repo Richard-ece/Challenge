@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:pokedex/pages/widget/theme.dart';
+import 'package:provider/provider.dart';
 import 'package:pokedex/bloc/pokemon/pokemon_bloc.dart';
 import 'package:pokedex/bloc/pokemon/pokemon_event.dart';
 import 'package:pokedex/bloc/pokemon/pokemon_state.dart';
@@ -14,6 +16,7 @@ class PokedexPage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     final TextEditingController searchController =
         useTextEditingController(text: "");
 
@@ -22,12 +25,13 @@ class PokedexPage extends HookWidget {
       return null;
     }, []);
 
+    final bool isDarkMode = themeNotifier.isDarkMode;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: Stack(
           children: [
-            // Stroked text as border.
             Text(
               'Pokédex',
               style: TextStyle(
@@ -39,7 +43,6 @@ class PokedexPage extends HookWidget {
                   ..color = ColorTheme.darkCyan,
               ),
             ),
-            // Solid text as fill.
             const Text(
               'Pokédex',
               style: TextStyle(
@@ -50,22 +53,19 @@ class PokedexPage extends HookWidget {
             ),
           ],
         ),
-        automaticallyImplyLeading: false,
         backgroundColor: ColorTheme.red,
         toolbarHeight: 80,
-        // title: const Text(
-        //   "Pokedex",
-        //   style: TextStyle(
-        //     fontFamily: 'PokemonSolid',
-        //     color: ColorTheme.yellow,
-
-        //     fontSize: 42,
-        //   ),
-        // ),
-        // automaticallyImplyLeading: false,
-        // backgroundColor: ColorTheme.crimson,
-
-        // Theme.of(context).primaryColor,
+        actions: [
+          IconButton(
+            icon: Icon(
+              isDarkMode ? Icons.dark_mode : Icons.light_mode_outlined,
+              color: Theme.of(context).iconTheme.color,
+            ),
+            onPressed: () {
+              themeNotifier.toggleTheme();
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<PokemonBloc, PokemonState>(
         builder: (context, state) {
@@ -105,7 +105,7 @@ class PokedexPage extends HookWidget {
                 }
 
                 return Container(
-                  color: Colors.white,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   child: Column(
                     children: [
                       Padding(
@@ -119,10 +119,10 @@ class PokedexPage extends HookWidget {
                                 onChanged: (_) {
                                   filterPokemons();
                                 },
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   icon: Icon(
                                     Icons.search,
-                                    color: Colors.black,
+                                    color: Theme.of(context).iconTheme.color,
                                   ),
                                   hintText: "Buscar por nombre",
                                   border: InputBorder.none,
@@ -132,14 +132,12 @@ class PokedexPage extends HookWidget {
                             IconButton(
                               icon: Icon(
                                 filterByFavorite.value
-                                    ? const IconData(0xecf3,
-                                        fontFamily: 'MaterialIcons')
-                                    : const IconData(0xecf2,
-                                        fontFamily: 'MaterialIcons'),
-                                color: Colors.black,
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: Theme.of(context).iconTheme.color,
                                 size: 24,
                               ),
-                              tooltip: 'Filtar',
+                              tooltip: 'Filtrar',
                               onPressed: () {
                                 filterByFavorite.value =
                                     !filterByFavorite.value;
@@ -154,7 +152,7 @@ class PokedexPage extends HookWidget {
                         child: GridPokemons(
                           pokemonList: pokemonList.value,
                           favoritePokemons: state.favoritePokemons!,
-                          // pokemon: null,
+                          isDarkMode: isDarkMode,
                         ),
                       ),
                     ],
@@ -181,76 +179,71 @@ class GridPokemons extends StatelessWidget {
     Key? key,
     required this.pokemonList,
     required this.favoritePokemons,
-    // required this.pokemon,
+    required this.isDarkMode, 
   }) : super(key: key);
 
   final List<PokemonSimple> pokemonList;
   final List<int> favoritePokemons;
-  // final TypesPokemon? pokemon;
+  final bool isDarkMode; 
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-        gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-        itemCount: pokemonList.length,
-        itemBuilder: (context, index) {
-          return Card(
-            // color: UIHelper.getColorFromType(pokemon?.typesPokemon![0]),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  NamesRoutes.description +
-                      "/" +
-                      pokemonList[index].id.toString(),
-                );
-              },
-              child: GridTile(
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              if (favoritePokemons
-                                  .contains(pokemonList[index].id)) {
-                                context.read<PokemonBloc>().add(
-                                    RemoveFavoritePokemon(
-                                        id: pokemonList[index].id));
-                              } else {
-                                context.read<PokemonBloc>().add(
-                                    AddFavoritePokemon(
-                                        id: pokemonList[index].id));
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(6.0),
-                              child: Icon(
-                                favoritePokemons.contains(pokemonList[index].id)
-                                    ? const IconData(0xecf3,
-                                        fontFamily: 'MaterialIcons')
-                                    : const IconData(0xecf2,
-                                        fontFamily: 'MaterialIcons'),
-                                color: Colors.black,
-                                size: 24.0,
-                              ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+      itemCount: pokemonList.length,
+      itemBuilder: (context, index) {
+        return Card(
+          color: isDarkMode ? Colors.grey[850] : Theme.of(context).cardColor,  
+          child: GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                NamesRoutes.description + "/" + pokemonList[index].id.toString(),
+              );
+            },
+            child: GridTile(
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            if (favoritePokemons.contains(pokemonList[index].id)) {
+                              context.read<PokemonBloc>().add(
+                                RemoveFavoritePokemon(id: pokemonList[index].id),
+                              );
+                            } else {
+                              context.read<PokemonBloc>().add(
+                                AddFavoritePokemon(id: pokemonList[index].id),
+                              );
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Icon(
+                              favoritePokemons.contains(pokemonList[index].id)
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Theme.of(context).iconTheme.color,
+                              size: 24.0,
                             ),
                           ),
-                        ],
-                      ),
-                      Image.network(pokemonList[index].imageUrl),
-                      Text(pokemonList[index].name)
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    Image.network(pokemonList[index].imageUrl),
+                    Text(pokemonList[index].name)
+                  ],
                 ),
               ),
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }
